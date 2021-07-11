@@ -83,6 +83,6 @@ self.addEventListener("fetch", evt => {
                     });
                 });
             });
-        });
+        })
     );
 });
