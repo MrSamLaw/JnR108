@@ -40,3 +40,49 @@ self.addEventListener("activate", function (evt) {
             .then(() => self.clients.claim())
     );
 });
+
+self.addEventListener("fetch", evt => {
+    // non GET requests are not cached and request to other origins are not cached
+    if (
+        evt.request.method !== "GET" ||
+        !evt.request.url.startsWith(self.location.origin)
+    ) {
+        evt.respondWith(fetch(evt.request));
+        return;
+
+    }
+
+    // Handle runtime GET requests for data from /api routes
+    if (evt.request.url.includes("/api/transaction")) {
+        // make network request and fallback to cache if newtork request fails (offline)
+        evt.respondWith(
+            caches.open(DATA_CACHE_NAME).then(cache => {
+                return fetch(evt.request)
+                    .then(response => {
+                        cache.put(evt.request, response.clone());
+                        return response;
+                    })
+                    .catch(() => caches.match(event.request));
+            })
+        );
+        return;
+    }
+
+    // Use cache first for all other requests for performance
+    evt.respondWith(
+        caches.match(evt.request).then(cachedResponse => {
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+
+            // Request is not in cache.  Make network request and cache the response
+            return caches.open(DATA_CACHE_NAME).then(cache => {
+                return fetch(evt.request).then(response => {
+                    return cache.put(evt.request, response.clone()).then(() => {
+                        return response;
+                    });
+                });
+            });
+        });
+    );
+});
