@@ -62,7 +62,7 @@ self.addEventListener("fetch", evt => {
                         cache.put(evt.request, response.clone());
                         return response;
                     })
-                    .catch(() => caches.match(event.request));
+                    .catch(() => caches.match(evt.request));
             })
         );
         return;
