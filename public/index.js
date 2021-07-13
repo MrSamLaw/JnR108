@@ -49,7 +49,7 @@ function populateChart() {
   // create date labels for chart
   let labels = reversed.map(t => {
     let date = new Date(t.date);
-    return `${date.getDate()}/${date.getMonth() + 1}/${date.getYear()}`;
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   });
 
   // create incremental values for chart
