@@ -5,17 +5,17 @@ const FILES_TO_CACHE = [
     "/db.js",
     "/styles.css",
     "/manifest.webmanifest",
-    "/icons/JnR108-512.png",
+    "/icons/JnR108-512.png"
 ];
 
-const CACHE_NAME = "static-cache-v2";
-const DATA_CACHE_NAME = "data-cache-v1";
+const STATIC_CACHE = "static-cache-v2";
+const RUNTIME_CACHE = "runtime-cache";
 
 // Install
 self.addEventListener("install", function (evt) {
     evt.waitUntil(
         caches
-            .open(CACHE_NAME)
+            .open(STATIC_CACHE)
             .then(cache => cache.addAll(FILES_TO_CACHE))
             .then(self.skipWaiting())
     );
@@ -23,7 +23,7 @@ self.addEventListener("install", function (evt) {
 
 // Activate
 self.addEventListener("activate", function (evt) {
-    const currentCaches = [CACHE_NAME, DATA_CACHE_NAME];
+    const currentCaches = [STATIC_CACHE, RUNTIME_CACHE];
     evt.waitUntil(
         caches
             .keys()
@@ -49,14 +49,13 @@ self.addEventListener("fetch", evt => {
     ) {
         evt.respondWith(fetch(evt.request));
         return;
-
     }
 
     // Handle runtime GET requests for data from /api routes
     if (evt.request.url.includes("/api/transaction")) {
-        // make network request and fallback to cache if newtork request fails (offline)
+        // make network request and fallback to cache if network request fails (offline)
         evt.respondWith(
-            caches.open(DATA_CACHE_NAME).then(cache => {
+            caches.open(RUNTIME_CACHE).then(cache => {
                 return fetch(evt.request)
                     .then(response => {
                         cache.put(evt.request, response.clone());
@@ -76,7 +75,7 @@ self.addEventListener("fetch", evt => {
             }
 
             // Request is not in cache.  Make network request and cache the response
-            return caches.open(DATA_CACHE_NAME).then(cache => {
+            return caches.open(RUNTIME_CACHE).then(cache => {
                 return fetch(evt.request).then(response => {
                     return cache.put(evt.request, response.clone()).then(() => {
                         return response;
